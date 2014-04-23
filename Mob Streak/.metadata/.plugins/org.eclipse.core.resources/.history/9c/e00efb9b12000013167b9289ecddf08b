@@ -1,0 +1,195 @@
+package mobStreak;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public class mobStreakListener extends JavaPlugin implements Listener {
+	
+	
+	public static List<String> ls=new ArrayList<String>();
+	public static FileConfiguration config = mobStreak.config;
+	public mobStreak ms;
+	
+	public mobStreakListener(mobStreak instance){
+		ms = instance;
+	}
+
+	/**add a kill to the killers score. requires the players name (String), the player (Player), and the event (Event).*/
+	public void addKill(String name, Player p, Event event){
+		if(nameInList(name, ls)){
+			int index = getNameIndex(name, ls);
+			int kills = Integer.parseInt(ls.get(index).replace(name+"-", ""));
+			ls.set(index, name + "-" + (kills + 1));
+			if(mobStreak.tellkills){
+				p.sendMessage(ChatColor.GREEN + "" + (kills+1) + " Kills.");
+			}
+			rewardPlayer(p, name, kills, event);
+		}else{
+			ls.add(name.toLowerCase() + "-1");
+			if(mobStreak.tellkills){
+				p.sendMessage(ChatColor.GREEN + "1 Kill.");
+			}
+			rewardPlayer(p, name, 1, event);
+		}
+	}
+	/**work out what streak the player needs, if they're on it, reward them.*/
+	public void rewardPlayer(Player p, String name, int kills, Event event) {
+		int step = Integer.parseInt(mobStreak.step);
+		int ncommands = mobStreak.commands.size();
+		CommandSender console=Bukkit.getConsoleSender();
+		int i = 1;
+
+		while(!(i > ncommands)){
+			int rewardAt = (i*step)-1;
+			if(kills == rewardAt){
+				String command = mobStreak.commands.get(i-1).replace("&name", name);
+				command = command.replace("&kills", ""+ (kills + 1));
+				if(command.contains("msd")){
+					String[] commands = command.split("&cmd ");
+					int length = commands.length;
+					int x = 1;
+					while(x <= length && length > 0){
+						if(commands[x-1].startsWith("msd")){
+							
+							String[] msd = commands[x-1].split(" ");
+							int amount = 1;
+							int item = Integer.parseInt(msd[1]);
+							if(msd.length ==3){
+								amount = Integer.parseInt(msd[2]);
+							}
+							ItemStack stack = new ItemStack(item, amount);
+							((EntityDeathEvent) event).getDrops().add(stack);
+						}else{
+							Bukkit.getServer().dispatchCommand(console,commands[x-1]);
+						}
+						x=x+1;
+					}
+				}else{
+					String[] commands = command.split("&cmd ");
+					int length = commands.length;
+					int x = 1;
+					while(x <= length && length > 0){
+						Bukkit.getServer().dispatchCommand(console,commands[x-1]);
+						x=x+1;
+					}
+				}
+			}
+			i = i+1;
+		}
+		
+	
+	}
+
+	/** search a list for the index of the String given. Returns its index.*/
+	public static int getNameIndex(String name, List<String> list) {
+		Iterator<String> itr = list.iterator();
+		int index = 0;
+		while(itr.hasNext()) {
+
+			String listN = itr.next();
+			if(listN.toLowerCase().contains(name)){
+				return index;
+			}else{
+				index = index+1;
+			}
+
+		}
+		return (Integer) null;
+	}
+	/** search the list for the String given. If found, returns true. */
+	public static boolean nameInList(String name, List<String> list) {
+		
+		Iterator<String> itr = list.iterator();
+		while(itr.hasNext()) {
+			String listN = itr.next();
+			if(listN.toLowerCase().contains(name)){
+				return true;
+			}
+
+		}
+		return false;
+	}
+	@EventHandler
+	public void onPlayerDeath(PlayerDeathEvent event){
+		Player p = event.getEntity();
+		String name = p.getName().toLowerCase();
+		if(!p.hasPermission("mobstreak.noStreak")){
+			if(nameInList(name, ls)){
+				int index = getNameIndex(name, ls);
+				int kills = Integer.parseInt(ls.get(index).replace(name+"-", ""));
+				if(kills == 1){
+					p.sendMessage(ChatColor.GREEN + "[Mob Streak] you got 1 kill!");
+					if(mobStreak.config.getBoolean("broadcast-on-death")){
+						Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "[Mob Streak] " + name + " died with a streak of 1 kill");
+					}
+					ls.remove(index);
+				}else{
+					p.sendMessage(ChatColor.GREEN + "[Mob Streak] you got " + kills + " kills!");
+					if(mobStreak.config.getBoolean("broadcast-on-death")){
+						Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "[Mob Streak] " + name + " died with a streak of " + kills + " kills.");
+					}
+					ls.remove(index);
+				}
+			}else{
+				p.sendMessage(ChatColor.GREEN + "[Mob Streak] Bad luck, You didn't get a kill");
+				if(mobStreak.config.getBoolean("broadcast-on-death")){
+					Bukkit.getServer().broadcastMessage(ChatColor.GREEN + "[Mob Streak] " + name + " died without killing anything, or anyone, worthy of notice...");
+				}
+			}
+		}
+		if(event.getEntity().getKiller() instanceof Player){
+			Player p2 = event.getEntity().getKiller();
+	        if(!p2.hasPermission("mobstreak.noStreak")){
+	        	if(killable("player")){	
+		        	String name2 = p2.getName().toLowerCase();
+		        	addKill(name2, p2, event);
+		        }
+	        }
+		}
+		
+	}
+	@EventHandler
+	public void onEntityDeath(EntityDeathEvent event){
+		Player p = event.getEntity().getKiller();
+		String eName = event.getEntity().toString().toLowerCase().replace("craft", "");
+		
+		try{
+			if(!p.hasPermission("mobstreak.noStreak")){
+				if(event.getEntity().getKiller() instanceof Player){
+					if(killable(eName)){	
+						String name = p.getName().toLowerCase();
+		        		addKill(name, p, event);
+					}
+				}
+			}
+		}catch(Exception e){}
+	}
+
+	/** searches the killables list for the given entities name */
+	private boolean killable(String eName) {
+		List<String> killables = mobStreak.killables;
+		Iterator<String> itr = killables.iterator();
+		while(itr.hasNext()) {
+
+			String listN = itr.next().replace(" ", "");
+			
+			if(listN.toLowerCase().contains(eName)){
+				return true;
+			}
+		}
+		return false;
+	}
+}

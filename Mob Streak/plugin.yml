@@ -1,0 +1,59 @@
+name: mobStreak
+main: io.github.pure1.mobStreak.mobStreak
+commands:
+  mobStreak:
+    description: Shows mobStreak help.
+    aliases: [ms]
+  msf:
+    description: does nothing, for config to make blank commands.
+  msd:
+    description: does nothing, for config to drop a reward where something was killed.
+permissions:
+  mobstreak.*:
+    description: Gives access to all mobstreak commands
+    children:
+      mobstreak.mobstreak: true
+      mobstreak.help: true
+      mobstreak.highscore: true
+      mobstreak.streak: true
+      mobstreak.reload: true
+      mobstreak.clear: true
+      mobstreak.set: true
+      #mobstreak.setcmd: true
+      mobstreak.commands: true
+      mobstreak.noStreak: false
+    mobstreak.mobstreak:
+      description: Allows you to use the /mobstreak command.
+      default: true
+    mobstreak.help:
+      description: Allows you to use the /mobstreak help command.
+      default: true
+    mobstreak.highscore:
+      description: Allows you to use the /mobstreak help command.
+      default: true
+    mobstreak.streak:
+      description: Allows you to use the /mobstreak streak command.
+      default: true
+    mobstreak.reload:
+      description: Allows you to use the /mobstreak reload command.
+      default: op
+    mobstreak.clear:
+      description: Allows you to use the /mobstreak clear command.
+      default: op
+    mobstreak.set:
+      description: Allows you to use the /mobstreak set command.
+      default: op
+    #mobstreak.setcmd:
+      #description: Allows you to use the /mobstreak setcmd command.
+      #default: op
+    mobstreak.commands:
+      description: Allows you to use the /mobstreak commands command.
+      default: op
+    mobstreak.noStreak:
+      description: If true, you will not gain a streak.
+      default: false
+        
+version: 1.1
+
+
+

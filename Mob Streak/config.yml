@@ -1,0 +1,49 @@
+# Mobs that increase the streak.
+mobs: 
+ - Blaze
+ - Cave spider
+ - Creeper
+ - Ghast
+ - Magma Cube
+ - Silverfish
+ - Skeleton
+ - Slime
+ - Spider
+ - Witch
+ - Wither Skeleton
+ - Zombie
+ - Zombie Villager
+
+# commands, in order of steps. 
+commands:
+  # gives player an iron sword when they reach the first step.
+  - give &name 267
+  # gives player an gold sword when they reach the first step.
+  - give &name 283
+  # gives player an diamond sword when they reach the first step.
+  - give &name 276
+
+## Variables ##
+# &name = The name of the player who reaches a step.
+# &randName = a randomly picked name from the server list.
+# &kills = The number of kills the player has made. 
+
+## Config commands ##
+# msf = mobstreak fill, does nothing(its not suppost to).
+# msd [item] <amount> = mobstreak drop, does nothing out side of this
+# config, drop the desired items where the entity that was killed died.
+
+# the number of kill a player has to get before a command is run,
+# if there are three commands the first is run when the player
+# reaches 5 kills, then the next at 10 kills and the last at 15 kills.
+command-step: 5
+
+# Tell player their streak when they kill something?
+tell-streak: true
+
+# Tell everyone the players score when they die.
+broadcast-on-death: true
+
+# Save the streaks on stop/reload?
+Save-streaks: true
+
